@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>彩虹简谱字库 · JianPu Bold 预览与键盘对照</title>
+<style>
+@font-face { font-family:'JianPuBold'; src:url('fonts/JianPu Bold.ttf') format('truetype'); font-display:swap; }
+:root { --ink:#222; --accent:#2f6f4f; }
+* { box-sizing:border-box; }
+body { margin:0; padding:24px; background:#eef1f4; color:var(--ink); font-family:"STSong","Songti SC","SimSun",serif; }
+h1 { font-size:20px; }
+h2 { font-size:15px; margin:26px 0 8px; color:var(--accent); border-bottom:1px solid #c9d4cd; padding-bottom:4px; }
+.note { font-size:13px; color:#555; line-height:1.6; }
+.sheet { background:#fffdf8; border:1px solid #dfe3e8; border-radius:8px; padding:22px 26px; box-shadow:0 10px 30px rgba(20,30,40,.08); margin-top:12px; }
+.mel { font-family:'JianPuBold'; font-size:44px; line-height:1.75; letter-spacing:2px; white-space:pre-wrap; background:#fff; }
+.mel.small { font-size:28px; }
+.raw { font-family:"STSong",serif; font-size:15px; color:#777; margin-top:4px; }
+table.kbd { border-collapse:collapse; width:100%; background:#fff; }
+table.kbd th, table.kbd td { border:1px solid #ccd4db; padding:5px 8px; font-size:13px; text-align:left; vertical-align:top; }
+table.kbd th { background:#eef3f6; font-weight:700; white-space:nowrap; }
+table.kbd .jp { font-family:'JianPuBold'; font-size:22px; line-height:1.4; white-space:nowrap; }
+.btn { border:1px solid #9fb0a4; background:#fff; border-radius:5px; padding:5px 12px; cursor:pointer; }
+.btn.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+.toolrow { margin:10px 0; }
+</style>
+</head>
+<body>
+<h1>🌈 彩虹简谱字库（JianPu Bold）预览</h1>
+<p class="note">本字体采用「字符映射」制谱：每个按键直接对应一个简谱符号（自带音高、音值、高低音点），所见即所得，无需渲染引擎。下面两行是同一段旋律 —— 上为<b>字体渲染效果</b>，下为<b>原始按键</b>（切换字体可看到原始字符）。</p>
+
+<div class="toolrow">
+  显示方式：
+  <button class="btn on" id="btnJp" onclick="setFont('JianPuBold')">JianPu Bold（彩虹）</button>
+  <button class="btn" id="btnAscii" onclick="setFont('JianpuASCII')">JianpuASCII（开源）</button>
+  <button class="btn" id="btnRaw" onclick="setFont('STSong')">看原始按键</button>
+  <label style="margin-left:14px">字号 <input id="size" type="range" min="22" max="64" value="44" oninput="document.getElementById('mel').style.fontSize=this.value+'px'"></label>
+</div>
+
+<div class="sheet">
+  <h2 style="margin-top:0">《庆祝耶稣降生》片段 · 四声部之一（示例）</h2>
+  <div class="mel" id="mel">#~ r g r h r g ' r f r f r d r s ' r a r s r d r f ' r g--- "</div>
+  <div class="raw">原始按键：#~ r g r h r g ' r f r f r d r s ' r a r s r d r f ' r g--- "</div>
+  <p class="note">说明：a s d f g h j＝1 2 3 4 5 6 7；k＝休止符 0；r＝高音点；z＝低音点；x＝八分减时线（都打在<b>音符前</b>）；'＝小节线；#~＝4/4 拍号。示范旋律：5' 5' 6' 5' | 4' 4' 3' 2' | 1' 2' 3' 4' | 5'— — ||</p>
+</div>
+
+<h2>🎹 键盘对照表（摘自彩虹简谱字库《符号一览表》）</h2>
+<table class="kbd">
+<tr><th style="width:150px">类别</th><th>按键 → 符号（字体渲染）</th><th>原始按键</th></tr>
+<tr><td>基本音阶、休止符</td><td class="jp">a s d f g h j k</td><td>a s d f g h j k ＝ 1 2 3 4 5 6 7 0</td></tr>
+<tr><td>副点（附点）</td><td class="jp">l L</td><td>l / L</td></tr>
+<tr><td>升降音（还原）</td><td class="jp">q w e</td><td>q＝升 ♯　w＝降 ♭　e＝还原 ♮</td></tr>
+<tr><td>高音、倍高音</td><td class="jp">r R</td><td>r＝高音点　R＝倍高音点</td></tr>
+<tr><td>低音、倍低音</td><td class="jp">z Z</td><td>z＝低音点　Z＝倍低音点</td></tr>
+<tr><td>延音线</td><td class="jp">; :</td><td>; / :（连接两个相同音高音符）</td></tr>
+<tr><td>连音线（圆滑线）</td><td class="jp">t u y</td><td>t u y（在上方）</td></tr>
+<tr><td>延长音（自由延长）</td><td class="jp">i I</td><td>i / I</td></tr>
+<tr><td>减时线</td><td class="jp">x c v b n m</td><td>x c v＝八分（下方）　b n m＝八分（另一位置）</td></tr>
+<tr><td>倍减时线</td><td class="jp">X C V B N M</td><td>X C V＝十六分　B N M＝十六分</td></tr>
+<tr><td>小节线、终止线</td><td class="jp">' " /</td><td>'＝小节线　"＝终止线</td></tr>
+<tr><td>反复记号</td><td class="jp">, . Q W &lt; &gt;</td><td>, . ＝反复起点/终点　Q W &lt; &gt;＝其他反复</td></tr>
+<tr><td>渐弱渐强</td><td class="jp">+ |</td><td>+ ｜（位于上方）</td></tr>
+<tr><td>保持音</td><td class="jp">E</td><td>E＝保持音</td></tr>
+<tr><td>装饰音（倚音）</td><td class="jp">p [ ] }</td><td>p [＝前倚音　] }＝后倚音</td></tr>
+<tr><td>换气记号</td><td class="jp">K</td><td>K＝换气</td></tr>
+<tr><td>节奏记号</td><td class="jp">A S D</td><td>A / S / D</td></tr>
+<tr><td>拍号</td><td class="jp">#~ $! %! &amp;@</td><td>#~＝4/4　$!＝3/4　%!＝2/4　&amp;@＝6/8</td></tr>
+<tr><td>散拍子</td><td class="jp">=</td><td>=</td></tr>
+<tr><td>速度记号</td><td class="jp">\</td><td>\</td></tr>
+</table>
+
+<script>
+function setFont(fn){
+  document.getElementById('mel').style.fontFamily = fn==='STSong' ? '"STSong",serif' : "'"+fn+"'";
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById(fn==='JianPuBold'?'btnJp':fn==='JianpuASCII'?'btnAscii':'btnRaw').classList.add('on');
+}
+</script>
+</body>
+</html>
