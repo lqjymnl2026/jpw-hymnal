@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JP-Word 简谱编辑（网页版）· 简谱字体所见即所得</title>
+<style>
+@font-face { font-family:'JianpuASCII'; src:url('fonts/JianpuASCII.ttf') format('truetype'); font-display:swap; }
+@font-face { font-family:'JianPuBold'; src:url('fonts/JianPu Bold.ttf') format('truetype'); font-display:swap; }
+@font-face { font-family:'xVacle'; src:url('fonts/XVACLE-Regular.ttf') format('truetype'); font-display:swap; }
+:root { --ink:#222; --line:#c9cfd6; --accent:#2f6f4f; --accent2:#b33b2e; }
+* { box-sizing:border-box; }
+body { margin:0; color:var(--ink); background:#e6e9ed; font-family:"STSong","Songti SC","SimSun",serif; font-size:14px; }
+button { cursor:pointer; font:inherit; }
+input,textarea { font:inherit; }
+.menubar { display:flex; align-items:center; gap:2px; padding:5px 10px; background:#2c3a45; color:#e9eef2; font:13px system-ui,sans-serif; }
+.menubar .mi { padding:4px 10px; border-radius:4px; cursor:pointer; }
+.menubar .mi:hover { background:#3d4f5d; }
+.menubar .brand { margin-right:14px; color:#db9f73; font-weight:700; letter-spacing:.06em; }
+.menubar .spacer { flex:1; }
+.toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:7px 10px; background:#dde3e8; border-bottom:1px solid var(--line); font:12px system-ui,sans-serif; }
+.tb-group { display:flex; align-items:center; gap:4px; padding:0 8px; border-right:1px solid #b9c1c9; }
+.tb-group:last-child { border-right:0; }
+.tb-btn { border:1px solid #aeb7c0; border-radius:4px; padding:4px 9px; background:#f7f9fb; color:#33414d; font-weight:600; }
+.tb-btn:hover { background:#fff; }
+.tb-btn.primary { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+.tb-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+.curdur { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; background:#fff; border:1px solid #aeb7c0; border-radius:4px; font-weight:700; color:#b33b2e; }
+select,input[type=number] { padding:3px 6px; border:1px solid #aeb7c0; border-radius:4px; }
+.app { display:grid; grid-template-columns:252px minmax(0,1fr); height:calc(100vh - 74px); }
+.palette { padding:12px; background:#f2f4f6; border-right:1px solid var(--line); overflow:auto; }
+.palette h3 { margin:14px 0 6px; font-size:12px; color:#55616c; letter-spacing:.08em; }
+.palette h3:first-child { margin-top:0; }
+.pgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.pbtn { border:1px solid #b9c2cb; border-radius:5px; padding:7px 2px; background:#fff; text-align:center; font:12px system-ui,sans-serif; color:#33414d; }
+.pbtn:hover { border-color:var(--accent); }
+.pbtn .sym { display:block; font-size:17px; font-family:'JianpuASCII','STSong',serif; line-height:1.1; }
+.pbtn .lbl { display:block; margin-top:2px; color:#77828c; font-size:10px; }
+.pbtn.dis { opacity:.45; cursor:not-allowed; }
+.pbtn.on { background:#e2efe7; border-color:var(--accent); color:var(--accent); font-weight:700; }
+.form-grid { display:grid; grid-template-columns:1fr 1.6fr; gap:7px; margin-top:6px; }
+.form-grid .field label { display:block; margin-bottom:3px; color:#55616c; font:11px system-ui,sans-serif; }
+.form-grid input { width:100%; border:1px solid #b9c2cb; border-radius:4px; padding:4px 7px; }
+.main { padding:16px; overflow:auto; background:#d9dee3; }
+.paper { max-width:960px; margin:0 auto; background:#fffdf8; padding:38px 44px 46px; box-shadow:0 16px 40px rgba(20,30,40,.15); }
+.phead { display:grid; grid-template-columns:48px 1fr auto; gap:10px; align-items:start; margin-bottom:18px; }
+.phead .no { font-size:19px; font-weight:700; }
+.phead .tt { text-align:center; font-size:25px; font-weight:700; letter-spacing:.14em; line-height:1.15; }
+.phead .sub { text-align:center; font-size:13px; color:#555; margin-top:3px; letter-spacing:.08em; }
+.phead .meta { text-align:right; font-size:16px; font-weight:700; white-space:nowrap; line-height:1.5; }
+.phead .meta .src { font-size:11px; font-weight:400; color:#666; }
+.voice { margin-top:14px; }
+.vlabel { display:inline-block; width:46px; font-weight:700; vertical-align:top; padding-top:6px; }
+.vbody { display:inline-block; width:calc(100% - 52px); vertical-align:top; }
+.vmel {
+  width:100%; min-height:64px; outline:none; padding:8px 6px; border:1px dashed #c3cad2; border-radius:6px;
+  background:#fff; color:#222;
+  font-family:'JianpuASCII','STSong',serif;
+  font-size:var(--note-size,30px); font-weight:normal; line-height:1.7;
+  font-variant-ligatures:common-ligatures; font-feature-settings:'liga' 1;
+  white-space:pre-wrap; overflow-wrap:normal; caret-color:var(--accent2);
+}
+.vmel:focus { border-color:#8fa0ad; border-style:solid; }
+.vlyr { width:100%; border:1px dashed #d5dbe1; border-radius:5px; outline:none; resize:none; padding:5px 8px; background:#fbfcfd; color:#555; font-size:13px; min-height:30px; margin-top:5px; }
+.vlyr:focus { border-color:#b9c2cb; border-style:solid; }
+.pfoot { margin-top:26px; text-align:center; color:#888; font:11px system-ui,sans-serif; }
+.status { margin-top:12px; font:12px/1.5 system-ui,sans-serif; color:#3f7d46; }
+.status.warn { color:#b3541e; }
+@media print {
+  .menubar,.toolbar,.palette,.status { display:none !important; }
+  .app { display:block; height:auto; }
+  .main { padding:0; background:#fff; }
+  .paper { max-width:none; padding:16px 24px; box-shadow:none; }
+  .vmel { border:none; padding:2px 0; font-size:24px; }
+  .vlyr { display:none !important; }
+}
+</style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2c3a45">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<div class="menubar">
+  <span class="brand">JP-Word 网页版</span>
+  <span class="mi" data-menu="file">文件</span>
+  <span class="mi" data-menu="edit">编辑</span>
+  <span class="mi" data-menu="insert">插入</span>
+  <span class="mi" data-menu="format">格式</span>
+  <span class="mi" data-menu="layout">排版</span>
+  <span class="spacer"></span>
+  <span class="mi" data-menu="help">帮助</span>
+</div>
+<div class="toolbar">
+  <div class="tb-group">
+    <button class="tb-btn on" id="modeStd">标准模式</button>
+    <button class="tb-btn" id="modeRainbow">彩虹模式</button>
+    <button class="tb-btn" id="modeAbc">ABC代码</button>
+  </div>
+  <div class="tb-group">
+    <label>字体</label>
+    <select id="fontSel" title="选择简谱字体方案">
+      <option value="JianpuASCII">JianpuASCII（开源）</option>
+      <option value="JianPuBold">彩虹 JianPu Bold</option>
+      <option value="xVacle">x-Vacle</option>
+    </select>
+    <a href="jianpu-bold-demo.html" target="_blank" style="font:12px system-ui;color:#2f6f4f;margin-left:6px">彩虹字体预览/键盘对照</a>
+  </div>
+  <div class="tb-group">
+    <span class="curdur">当前时值：<b id="curDurLabel">四分</b></span>
+    <button class="tb-btn primary" id="comboBtn" title="切换音值组合（等同按空格）">切换音值组合 ␣</button>
+  </div>
+  <div class="tb-group">
+    <label>字号</label><input id="noteSize" type="number" min="16" max="52" value="30" style="width:52px">
+    <label>拍号</label><input id="meter" value="4/4" style="width:52px">
+  </div>
+  <div class="tb-group">
+    <button class="tb-btn" id="printBtn">打印 / PDF</button>
+    <button class="tb-btn" id="saveBtn">保存</button>
+    <button class="tb-btn" id="loadBtn">读取</button>
+    <button class="tb-btn" id="demoBtn">示例</button>
+  </div>
+</div>
+<div class="app">
+  <aside class="palette">
+    <h3>歌曲信息</h3>
+    <div class="form-grid">
+      <div class="field"><label>编号</label><input id="fNo" value="39"></div>
+      <div class="field"><label>标题</label><input id="fTitle" value="庆祝耶稣降生"></div>
+      <div class="field"><label>副题</label><input id="fSub" value="（混声四部无伴奏合唱）"></div>
+      <div class="field"><label>调号</label><input id="fKey" value="G"></div>
+      <div class="field"><label>速度</label><input id="fTempo" value="108 快板庄严"></div>
+      <div class="field"><label>来源</label><input id="fSrc" value="北美山区歌曲 · 周鲲制谱"></div>
+    </div>
+    <h3>基本符号</h3>
+    <div class="pgrid" id="durGrid">
+      <button class="pbtn" data-dur="4"><span class="sym">1---</span><span class="lbl">全音符</span></button>
+      <button class="pbtn" data-dur="2"><span class="sym">1-</span><span class="lbl">二分</span></button>
+      <button class="pbtn on" data-dur="1"><span class="sym">1</span><span class="lbl">四分</span></button>
+      <button class="pbtn" data-dur="0.5"><span class="sym">1/</span><span class="lbl">八分</span></button>
+      <button class="pbtn" data-dur="0.25"><span class="sym">1//</span><span class="lbl">十六分</span></button>
+      <button class="pbtn" data-dur="1.5"><span class="sym">1.</span><span class="lbl">附点四分</span></button>
+      <button class="pbtn" data-dur="0.75"><span class="sym">1/.</span><span class="lbl">附点八分</span></button>
+      <button class="pbtn" data-ins="0"><span class="sym">0</span><span class="lbl">休止</span></button>
+      <button class="pbtn" data-ins="'"><span class="sym">1'</span><span class="lbl">高音点</span></button>
+      <button class="pbtn" data-ins=","><span class="sym">1,</span><span class="lbl">低音点</span></button>
+      <button class="pbtn" data-ins="|"><span class="sym">|</span><span class="lbl">小节线</span></button>
+      <button class="pbtn" data-ins="||"><span class="sym">||</span><span class="lbl">终止线</span></button>
+    </div>
+    <h3>附属符号</h3>
+    <div class="pgrid">
+      <button class="pbtn" data-ins="mf"><span class="sym" style="font-size:13px">mf</span><span class="lbl">中强</span></button>
+      <button class="pbtn" data-ins="mp"><span class="sym" style="font-size:13px">mp</span><span class="lbl">中弱</span></button>
+      <button class="pbtn" data-ins="f"><span class="sym" style="font-size:15px">f</span><span class="lbl">强</span></button>
+      <button class="pbtn" data-ins="p"><span class="sym" style="font-size:15px">p</span><span class="lbl">弱</span></button>
+      <button class="pbtn" data-ins="ff"><span class="sym" style="font-size:13px">ff</span><span class="lbl">很强</span></button>
+      <button class="pbtn" data-ins="pp"><span class="sym" style="font-size:13px">pp</span><span class="lbl">很弱</span></button>
+      <button class="pbtn" data-ins="渐强"><span class="sym" style="font-size:11px">渐强</span><span class="lbl">cresc.</span></button>
+      <button class="pbtn" data-ins="渐弱"><span class="sym" style="font-size:11px">渐弱</span><span class="lbl">dim.</span></button>
+      <button class="pbtn" data-ins="rall."><span class="sym" style="font-size:11px">rall.</span><span class="lbl">渐慢</span></button>
+      <button class="pbtn" data-ins="rit."><span class="sym" style="font-size:11px">rit.</span><span class="lbl">渐慢</span></button>
+      <button class="pbtn" data-ins="a tempo"><span class="sym" style="font-size:11px">a tempo</span><span class="lbl">回原速</span></button>
+      <button class="pbtn" data-ins="|:"><span class="sym" style="font-size:16px">|:</span><span class="lbl">反复开始</span></button>
+      <button class="pbtn" data-ins=":|"><span class="sym" style="font-size:16px">:|</span><span class="lbl">反复结束</span></button>
+    </div>
+    <h3>声部</h3>
+    <div class="pgrid" style="grid-template-columns:1fr 1fr">
+      <button class="pbtn" id="addVoice">＋ 声部</button>
+      <button class="pbtn" id="delVoice">－ 声部</button>
+    </div>
+    <p style="font:11px/1.6 system-ui;color:#77828c;margin-top:12px">简谱字体自带音高/音值/高低音点，<b>直接打字即出谱</b>：<code>1-7</code> 音符、<code>0</code> 休止、<code>'</code> 高音点、<code>,</code> 低音点、<code>/</code> 八分、<code>//</code> 十六分、<code>.</code> 附点、<code>-</code> 增时线、<code>|</code> 小节线。先选时值再输数字更方便；<b>空格＝切换音值组合</b>。</p>
+  </aside>
+
+  <main class="main">
+    <div class="paper" id="paper">
+      <header class="phead">
+        <div class="no" id="hNo">39</div>
+        <div class="ttwrap"><div class="tt" id="hTitle">庆祝耶稣降生</div><div class="sub" id="hSub">（混声四部无伴奏合唱）</div></div>
+        <div class="meta"><div id="hMeta">1=G　♩=108　快板庄严</div><div class="src" id="hSrc">北美山区歌曲 · 周鲲制谱</div></div>
+      </header>
+      <div id="voices"></div>
+      <footer class="pfoot"><span id="hFoot">《庆祝耶稣降生》 总 3 页 · 第 1 页</span></footer>
+      <div class="status" id="status">就绪</div>
+    </div>
+  </main>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const DUR = { '4':{name:'全音符',marks:'---'}, '3':{name:'附点二分',marks:'--'}, '2':{name:'二分',marks:'-'}, '1':{name:'四分',marks:''}, '0.5':{name:'八分',marks:'/'}, '0.25':{name:'十六分',marks:'//'}, '1.5':{name:'附点四分',marks:'.'}, '0.75':{name:'附点八分',marks:'/.'} };
+const COMBOS = { 1:[[1],[2],[3],[4],[1.5]], 2:[[0.5,0.5],[1.5,0.5],[0.5,1.5]], 3:[[0.5,0.25,0.25],[0.25,0.25,0.5],[0.25,0.5,0.25],[0.5,1,0.5]], 4:[[0.25,0.25,0.25,0.25],[0.5,0.5,0.25,0.25],[0.25,0.25,0.5,0.5]] };
+const marksFor = d => DUR[String(d)] ? DUR[String(d)].marks : '';
+const DEFAULT_VOICES = [
+  { label:'女高', melody:"5' 5' 6' 5' | 4' 4' 3' 2' | 1' 2' 3' 4' | 5'--- ||", lyrics:'庆 祝 耶 稣 基 督 诞 生，歌 颂 上 帝 旨 意 完 成。' },
+  { label:'女低', melody:'3 3 4 3 | 2 2 1 7 | 6 7 1 2 | 3--- ||', lyrics:'庆 祝 耶 稣 基 督 诞 生，歌 颂 上 帝 旨 意 完 成。' },
+  { label:'男高', melody:'1 1 1 1 | 7 7 6 5 | 6 5 4 2 | 1--- ||', lyrics:'庆 祝 耶 稣 基 督 诞 生，歌 颂 上 帝 旨 意 完 成。' },
+  { label:'男低', melody:'1 1 4 4 | 5 5 5 5 | 4 4 4 4 | 1--- ||', lyrics:'庆 祝 耶 稣 基 督 诞 生，歌 颂 上 帝 旨 意 完 成。' }
+];
+const demoState = { number:'39', title:'庆祝耶稣降生', sub:'（混声四部无伴奏合唱）', key:'G', tempo:'108 快板庄严', src:'北美山区歌曲 · 周鲲制谱', foot:'《庆祝耶稣降生》 总 3 页 · 第 1 页', meter:'4/4', voices: DEFAULT_VOICES.map(v => ({...v})) };
+let state = load() || JSON.parse(JSON.stringify(demoState));
+let curDur = '1';
+let comboState = { key:'', idx:-1 };
+let focused = null;
+
+function load(){ try{ return JSON.parse(localStorage.getItem('jpw-web-v3')); }catch{ return null; } }
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+/* ---------- 声部 ---------- */
+function renderVoices(){
+  $('voices').innerHTML = state.voices.map((v,i) => `<div class="voice" data-i="${i}">
+    <span class="vlabel"><input value="${esc(v.label)}" class="vlab" style="width:44px;border:0;outline:none;background:transparent;font-weight:700;text-align:center"></span>
+    <span class="vbody">
+      <div class="vmel" contenteditable="true" spellcheck="false" data-i="${i}" placeholder="音符 1-7…"></div>
+      <textarea class="vlyr" spellcheck="false" data-i="${i}" placeholder="歌词（每字空格分隔）">${esc(v.lyrics)}</textarea>
+    </span>
+  </div>`).join('');
+  document.querySelectorAll('.vmel').forEach(el => {
+    el.textContent = state.voices[el.dataset.i].melody || '';
+    el.addEventListener('input', () => { normalizeMelody(el); state.voices[el.dataset.i].melody = el.textContent; checkAll(); snapshot(); });
+    el.addEventListener('focus', () => focused = el);
+    el.addEventListener('keydown', e => onVmelKey(e, el));
+    el.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain')); });
+  });
+  document.querySelectorAll('.vlyr').forEach(ta => { ta.addEventListener('input', e => { state.voices[ta.dataset.i].lyrics = ta.value; }); });
+  document.querySelectorAll('.vlab').forEach(inp => { inp.addEventListener('input', e => { state.voices[inp.closest('.voice').dataset.i].label = inp.value; }); });
+}
+function normalizeMelody(el){
+  if (el.children.length > 0){ const t = el.innerText; el.textContent = t; }
+}
+function setCaret(el, pos){
+  const node = el.firstChild || (el.textContent = '', el.firstChild);
+  const range = document.createRange();
+  range.setStart(node, Math.min(pos, node.textContent.length));
+  range.collapse(true);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+}
+
+/* ---------- 输入：先选时值再输音 / 空格切换 ---------- */
+function onVmelKey(e, el){
+  if (e.key === ' '){ e.preventDefault(); focused = el; cycleCombo(); return; }
+  if (e.key === 'Enter'){ e.preventDefault(); document.execCommand('insertText', false, '\n'); normalizeMelody(el); return; }
+  if (/^[0-7]$/.test(e.key)){
+    e.preventDefault();
+    if (rainbowMode){
+      const m = rainbowMarks(curDur);
+      const note = R_NOTE[e.key] || '';
+      document.execCommand('insertText', false, m.pre + note + m.post);
+    } else {
+      document.execCommand('insertText', false, e.key + marksFor(curDur));
+    }
+    normalizeMelody(el); state.voices[el.dataset.i].melody = el.textContent; checkAll(); return;
+  }
+  if (rainbowMode){
+    // Word 式智能输入：高低音点/减时线自动放到音符前，附点/增时线放音符后
+    const trans = { "'":{ch:'r', before:true}, ',':{ch:'z', before:true}, '/':{ch:'x', before:true}, '.':{ch:'l', before:false}, '|':{ch:"'", before:false}, '-':{ch:'-', before:false} };
+    const t = trans[e.key];
+    if (t !== undefined){
+      e.preventDefault();
+      const text = el.textContent, pos = caretPos(el);
+      const before = text.slice(0, pos);
+      const m = t.before ? before.match(/([asdfghjk])$/) : null;
+      if (m){
+        const newText = text.slice(0, pos-1) + t.ch + m[1] + text.slice(pos);
+        el.textContent = newText; setCaret(el, pos + 1);
+      } else {
+        document.execCommand('insertText', false, t.ch);
+      }
+      normalizeMelody(el); state.voices[el.dataset.i].melody = el.textContent; checkAll(); return;
+    }
+  }
+}
+function insert(text){
+  const el = focused && focused.classList.contains('vmel') ? focused : (document.querySelector('.vmel') || null);
+  if (!el) return;
+  if (rainbowMode){
+    text = stdToRainbow(text);
+    // 音符前符号（高音点/低音点/减时线）智能放到前一个音符前面
+    if (/^[rzxX]$/.test(text)){
+      const pos = caretPos(el);
+      const before = el.textContent.slice(0, pos);
+      const m = before.match(/([asdfghjk])$/);
+      if (m){
+        el.textContent = el.textContent.slice(0, pos-1) + text + m[1] + el.textContent.slice(pos);
+        setCaret(el, pos + 1);
+        normalizeMelody(el); state.voices[el.dataset.i].melody = el.textContent; checkAll(); snapshot();
+        return;
+      }
+    }
+  }
+  document.execCommand('insertText', false, text);
+  normalizeMelody(el);
+  state.voices[el.dataset.i].melody = el.textContent;
+  checkAll(); snapshot();
+}
+function trailingGroup(text, pos){
+  let cur = text.slice(0, pos).replace(/[\s|]+$/, '');
+  const tokens = [];
+  while (true){
+    const m = cur.match(/([0-7]['',]*[./-]*)$/);
+    if (!m) break;
+    const before = cur.slice(0, cur.length - m[0].length);
+    if (before.endsWith('|')) break;
+    tokens.unshift(m[1]);
+    cur = before.replace(/\s+$/, '');
+  }
+  return { tokens, start: cur.length };
+}
+function cycleCombo(){
+  const el = focused && focused.classList.contains('vmel') ? focused : (document.querySelector('.vmel') || null);
+  if (!el) return;
+  const text = el.textContent;
+  const pos = caretPos(el);
+  const { tokens: group, start: groupStart } = trailingGroup(text, pos);
+  if (!group.length){ $('status').textContent = '空格：光标前没有音符组'; return; }
+  const combos = COMBOS[group.length];
+  if (!combos){ $('status').textContent = `暂不支持 ${group.length} 个音符的组合`; return; }
+  const pitchKey = group.map(t => t.replace(/[./-]/g,'')).join(',');
+  if (comboState.key !== pitchKey){ comboState.key = pitchKey; comboState.idx = -1; }
+  comboState.idx++;
+  if (comboState.idx >= combos.length) comboState.idx = -1;
+  const pat = comboState.idx >= 0 ? combos[comboState.idx] : group.map(() => 1);
+  const newGroup = group.map((tok,i) => tok.replace(/[./-]*$/,'') + marksFor(pat[i])).join(' ');
+  el.textContent = text.slice(0, groupStart) + newGroup + text.slice(pos);
+  setCaret(el, groupStart + newGroup.length);
+  state.voices[el.dataset.i].melody = el.textContent;
+  snapshot();
+  $('status').textContent = comboState.idx >= 0 ? '已切换：' + pat.map(p => DUR[String(p)].name).join(' + ') : '已还原：四分';
+  checkAll();
+}
+function caretPos(el){
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return el.textContent.length;
+  const r = sel.getRangeAt(0);
+  if (el.contains(r.startContainer)) return r.startOffset + (r.startContainer !== el ? el.textContent.length - r.startContainer.textContent.length : 0);
+  return el.textContent.length;
+}
+
+/* ---------- 拍数校验 ---------- */
+function parseCode(code){
+  const tokens = [];
+  let cur = '';
+  const cs = code.split('');
+  for (let i = 0; i < cs.length; i++){
+    const ch = cs[i];
+    if (/[0-7]/.test(ch)){ if (cur && !/^[0-7]/.test(cur)){ tokens.push(cur); cur = ''; } cur += ch; }
+    else if (ch === "'" || ch === ',' || ch === '/' || ch === '.' || ch === '-'){ if (cur) cur += ch; }
+    else if (ch === '|'){ if (cur){ tokens.push(cur); cur = ''; } if (cs[i+1] === '|'){ tokens.push('||'); i++; } else if (cs[i+1] === ':'){ tokens.push('|:'); i++; } else tokens.push('|'); }
+    else if (ch === ':'){ if (cs[i+1] === '|'){ tokens.push(':|'); i++; } }
+    else { if (cur){ tokens.push(cur); cur = ''; } if (!/\s/.test(ch)) tokens.push(ch); }
+  }
+  if (cur) tokens.push(cur);
+  return tokens;
+}
+function parseNote(tok){
+  const n = { valid:false, rest:false, digit:'', accidental:'', high:0, low:0, bars:0, dotted:0, sustain:0, raw:tok };
+  if (!tok) return n;
+  let i = 0;
+  if (tok[i] === '#' || tok[i] === 'b'){ n.accidental = tok[i]; i++; }
+  if (i >= tok.length || !/[0-7]/.test(tok[i])) return n;
+  n.digit = tok[i]; n.rest = tok[i] === '0'; i++;
+  for (; i < tok.length; i++){
+    const c = tok[i];
+    if (c === "'") n.high++;
+    else if (c === ',') n.low++;
+    else if (c === '/') n.bars++;
+    else if (c === '.') n.dotted++;
+    else if (c === '-') n.sustain++;
+  }
+  n.valid = true;
+  return n;
+}
+function noteBeats(n){ if (!n.valid) return 0; let v = n.bars === 0 ? 1 : 1/Math.pow(2,n.bars); if (n.dotted) v = v * (2 - Math.pow(0.5,n.dotted)); v += n.sustain; return v; }
+const BAR = new Set(['|','||','|:',':|',':||']);
+function checkAll(){
+  if (rainbowMode){ setStatus('彩虹模式：直接打字即出谱（拍数校验在标准模式进行）'); return; }
+  const mm = $('meter').value.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!mm){ setStatus('拍号请用 分子/分母', true); return; }
+  const target = Number(mm[1]) * (4 / Number(mm[2]));
+  const problems = [];
+  state.voices.forEach((v, vi) => {
+    let sum = 0, bar = 1, noteSeen = false;
+    parseCode(v.melody || '').forEach(t => {
+      if (BAR.has(t)){ if (noteSeen && Math.abs(sum-target) > 0.001) problems.push(`声部${vi+1} 第${bar}小节 ${sum.toFixed(2)}/${target}`); sum = 0; bar++; noteSeen = false; }
+      else { const n = parseNote(t); if (!n.valid) problems.push(`声部${vi+1} 无法识别：${t}`); else { sum += noteBeats(n); noteSeen = true; } }
+    });
+    if (noteSeen && Math.abs(sum-target) > 0.001) problems.push(`声部${vi+1} 第${bar}小节 ${sum.toFixed(2)}/${target}`);
+  });
+  setStatus(problems.length ? '⚠ ' + problems.slice(0,4).join('；') + (problems.length>4 ? ` 等${problems.length}处` : '') : `✓ 全部声部每小节 ${target} 拍`, problems.length > 0);
+}
+function setStatus(text, warn){ const el = $('status'); el.textContent = text; el.className = 'status' + (warn ? ' warn' : ''); }
+
+/* ---------- 标题 ---------- */
+function syncHead(){
+  $('hNo').textContent = state.number || '';
+  $('hTitle').textContent = state.title || '未命名';
+  $('hSub').textContent = state.sub || '';
+  $('hMeta').textContent = '1=' + state.key + (state.tempo ? '　♩=' + state.tempo : '');
+  $('hSrc').textContent = state.src || '';
+  $('hFoot').textContent = state.foot || '';
+  $('meter').value = state.meter || '4/4';
+  $('paper').style.setProperty('--note-size', ($('noteSize').value || 30) + 'px');
+}
+let history = []; let histIdx = -1;
+function snapshot(){ history = history.slice(0, histIdx+1); history.push(JSON.stringify(state)); if (history.length > 60) history.shift(); histIdx = history.length-1; }
+function undo(){ if (histIdx > 0){ histIdx--; state = JSON.parse(history[histIdx]); renderVoices(); syncHead(); checkAll(); } }
+function redo(){ if (histIdx < history.length-1){ histIdx++; state = JSON.parse(history[histIdx]); renderVoices(); syncHead(); checkAll(); } }
+
+/* ---------- 事件 ---------- */
+$('noteSize').addEventListener('input', syncHead);
+$('meter').addEventListener('input', e => { state.meter = e.target.value; checkAll(); });
+document.querySelectorAll('#durGrid [data-dur]').forEach(b => b.addEventListener('click', () => {
+  curDur = b.dataset.dur;
+  document.querySelectorAll('#durGrid [data-dur]').forEach(x => x.classList.toggle('on', x === b));
+  $('curDurLabel').textContent = DUR[curDur].name;
+}));
+document.querySelectorAll('.palette [data-ins]').forEach(b => b.addEventListener('click', () => { insert(b.dataset.ins); }));
+['fNo','fTitle','fSub','fKey','fTempo','fSrc'].forEach(id => $(id).addEventListener('input', e => {
+  state[{'fNo':'number','fTitle':'title','fSub':'sub','fKey':'key','fTempo':'tempo','fSrc':'src'}[id]] = e.target.value;
+  syncHead();
+}));
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'y'){ e.preventDefault(); redo(); }
+});
+$('comboBtn').addEventListener('click', cycleCombo);
+$('addVoice').addEventListener('click', () => { state.voices.push({ label:'声部' + (state.voices.length+1), melody:'', lyrics:'' }); renderVoices(); checkAll(); snapshot(); });
+$('delVoice').addEventListener('click', () => { if (state.voices.length > 1){ state.voices.pop(); renderVoices(); checkAll(); snapshot(); } });
+$('printBtn').addEventListener('click', () => window.print());
+$('saveBtn').addEventListener('click', () => { state.meter = $('meter').value; localStorage.setItem('jpw-web-v3', JSON.stringify(state)); setStatus('已保存到本机浏览器', false); });
+$('loadBtn').addEventListener('click', () => { const d = load(); if (d){ state = d; if (rainbowMode){ state.voices.forEach(v => { v.melody = stdToRainbow(v.melody || ''); }); } renderVoices(); syncHead(); checkAll(); setStatus('已读取保存内容', false); } });
+$('demoBtn').addEventListener('click', () => { state = JSON.parse(JSON.stringify(demoState)); if (rainbowMode){ state.voices.forEach(v => { v.melody = stdToRainbow(v.melody || ''); }); } renderVoices(); syncHead(); checkAll(); snapshot(); setStatus('已载入示例', false); });
+function applyFont(fn){
+  const map = { JianpuASCII:"'JianpuASCII','STSong',serif", JianPuBold:"'JianPuBold','STSong',serif", xVacle:"'xVacle','STSong',serif" };
+  document.querySelectorAll('.vmel').forEach(el => { el.style.fontFamily = map[fn] || map.JianpuASCII; });
+}
+
+/* ---------- 彩虹模式（JianPu Bold 字库：像在 Word 里直接打字出谱） ---------- */
+let rainbowMode = false;
+const R_NOTE = { '1':'a','2':'s','3':'d','4':'f','5':'g','6':'h','7':'j','0':'k' };
+const R_INV = Object.fromEntries(Object.entries(R_NOTE).map(([k,v])=>[v,k]));
+const R_MARK_FWD = { "'":'r', ',':'z', '.':'l', '|':"'", '||':'"', '|:':",'", ':|':"'.", '--':'', '-':'-' };
+const R_MARK_REV = { 'r':"'", 'z':',', 'l':'.', "'":'|', '"':'||' };
+function stdToRainbow(s){
+  let out='', i=0;
+  while (i < s.length){
+    const c = s[i];
+    if (c==='|' && s[i+1]==='|'){ out+='"'; i+=2; continue; }
+    if (c==='|' && s[i+1]===':'){ out+=",'"; i+=2; continue; }
+    if (c===':' && s[i+1]==='|'){ out+="'."; i+=2; continue; }
+    if (c==='/' && s[i+1]==='/'){ out+='X'; i+=2; continue; }
+    if (R_NOTE[c]){ out+=R_NOTE[c]; i++; continue; }
+    if (c === "'"){ out+='r'; i++; continue; }
+    if (c===','){ out+='z'; i++; continue; }
+    if (c==='.'){ out+='l'; i++; continue; }
+    if (c==='/'){ out+='x'; i++; continue; }
+    if (c==='|'){ out+="'"; i++; continue; }
+    out+=c; i++;
+  }
+  return out;
+}
+function rainbowToStd(s){
+  let out='', i=0;
+  while (i < s.length){
+    const c = s[i];
+    if (c==='X'){ out+='//'; i++; continue; }
+    if (c==='"'){ out+='||'; i++; continue; }
+    if (R_INV[c]){ out+=R_INV[c]; i++; continue; }
+    if (c==='r'){ out+="'"; i++; continue; }
+    if (c==='z'){ out+=','; i++; continue; }
+    if (c==='l'){ out+='.'; i++; continue; }
+    if (c==='x'){ out+='/'; i++; continue; }
+    if (c==="'"){ out+='|'; i++; continue; }
+    out+=c; i++;
+  }
+  return out;
+}
+// 彩虹时值记号：减时线(x/X)/高低音点写在音符前；增时线(-)/附点(l)写在音符后
+const R_DUR_PRE  = { '4':'', '3':'', '2':'', '1':'', '0.5':'x', '0.25':'X', '1.5':'', '0.75':'x' };
+const R_DUR_POST = { '4':'', '3':'--', '2':'-', '1':'', '0.5':'', '0.25':'', '1.5':'l', '0.75':'l' };
+function rainbowMarks(dur){ return { pre: R_DUR_PRE[dur]||'', post: R_DUR_POST[dur]||'' }; }
+function setRainbowMode(on){
+  rainbowMode = on;
+  document.querySelectorAll('.vmel').forEach(el => {
+    if (on) el.style.fontFamily = "'JianPuBold','STSong',serif";
+  });
+}
+
+$('fontSel').addEventListener('change', e => { applyFont(e.target.value); setStatus('已切换字体：' + e.target.selectedOptions[0].text, false); });
+function switchMode(mode){
+  $('modeStd').classList.toggle('on', mode==='std');
+  $('modeRainbow').classList.toggle('on', mode==='rainbow');
+  $('modeAbc').classList.toggle('on', mode==='abc');
+  const wasRainbow = rainbowMode;
+  if (mode === 'rainbow'){
+    if (!wasRainbow){ state.voices.forEach(v => { v.melody = stdToRainbow(v.melody || ''); }); }
+    setRainbowMode(true);
+    document.querySelectorAll('.vmel').forEach(el => { el.textContent = state.voices[el.dataset.i].melody || ''; });
+    $('status').textContent = '彩虹模式：像在 Word 里打字即出谱——打 1-7 出音符；按 \' 高音点、, 低音点、/ 八分、. 附点、| 小节线（自动放到位）；也可直接打 r z x l 等字库字符';
+  } else {
+    if (wasRainbow){ state.voices.forEach(v => { v.melody = rainbowToStd(v.melody || ''); }); }
+    setRainbowMode(false);
+    const fam = mode==='abc' ? "Menlo,Consolas,monospace" : "'JianpuASCII','STSong',serif";
+    document.querySelectorAll('.vmel').forEach(el => { el.style.fontFamily = fam; el.textContent = state.voices[el.dataset.i].melody || ''; });
+    $('status').textContent = mode==='abc' ? 'ABC 代码模式：显示原始代码字符' : '标准模式：简谱字体所见即所得 / 空格切换音值组合';
+  }
+  $('fontSel').value = mode==='rainbow' ? 'JianPuBold' : 'JianpuASCII';
+  checkAll();
+}
+$('modeStd').addEventListener('click', () => switchMode('std'));
+$('modeRainbow').addEventListener('click', () => switchMode('rainbow'));
+$('modeAbc').addEventListener('click', () => switchMode('abc'));
+document.querySelectorAll('.menubar .mi').forEach(mi => mi.addEventListener('click', () => {
+  const m = mi.dataset.menu;
+  if (m === 'file'){ const r = confirm('确定 = 打印/导出PDF\n取消 = 保存到浏览器'); if (r) window.print(); else $('saveBtn').click(); }
+  else if (m === 'edit'){ if (confirm('撤销上一步？')) undo(); }
+  else if (m === 'help') alert('JP-Word 网页版 v3\n· 简谱字体所见即所得：字体自带音高/音值/高低音点，直接打字即出谱\n· 工具栏可切换字体：JianpuASCII / 彩虹 JianPu Bold / x-Vacle\n· 彩虹字体键盘对照见“彩虹字体预览/键盘对照”\n· 先选时值再输数字，空格=切换音值组合\n· 多声部合唱、逐小节拍数校验、打印PDF\n· 语法：1-7 音符，0 休止，\' 高音点，, 低音点，/ 八分，// 十六分，. 附点，- 增时线，| 小节线');
+  else alert(`「${['插入','格式','排版'][['insert','format','layout'].indexOf(m)]}」功能在后续版本完善。`);
+}));
+
+renderVoices(); syncHead(); checkAll(); snapshot();
+</script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(function(){}); }
+</script>
+</body>
+</html>
